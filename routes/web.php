@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use Illuminate\Http\Response;
 class Task
 {
     public function __construct(
@@ -55,16 +55,26 @@ $tasks = [
     ),
 ];
 
+Route::get('/', function () {
+    return redirect()->route('tasks.index');
+});
+
 
 // Use é para poder acessar variáveis externas dentro de uma função anônima. No caso, estamos usando a variável $tasks que foi definida fora da função anônima para passá-la para a view 'index'.
-Route::get('/', function () use ($tasks) {
+Route::get('/tasks', function () use ($tasks) {
     return view('index', [
         'tasks' => $tasks
     ]);
 })->name('tasks.index');
 
-Route::get('/{id}', function ($id) {
-    return 'One single task';
+Route::get('/{id}', function ($id) use ($tasks) {
+    # Collect é uma função do Laravel que cria uma coleção a partir de um array. A coleção é uma estrutura de dados que fornece métodos úteis para manipular arrays de forma mais conveniente. No caso, estamos criando uma coleção a partir do array $tasks e usando o método firstWhere para encontrar o primeiro elemento da coleção que tenha o valor do campo 'id' igual ao valor da variável $id.
+    $task = collect($tasks)->firstWhere('id', $id);
+
+    if(!$task) {
+        abort(Response::HTTP_NOT_FOUND);
+    }
+    return view('show', ['task' => $task]);
 })->name('tasks.show');
 
 
